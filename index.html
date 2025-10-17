@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT 박스 관리 시스템</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        input, select, button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        .btn-secondary {
+            background: #2196F3;
+        }
+        
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+        }
+        
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        
+        .btn-warning {
+            background: #ff9800;
+        }
+        
+        .btn-warning:hover {
+            background: #e68900;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: relative;
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            border-radius: 10px;
+            padding: 30px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            margin-bottom: 25px;
+        }
+        
+        .modal-header h2 {
+            color: #333;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .required::after {
+            content: " *";
+            color: red;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .page-info {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 150px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 IoT 박스 관리 시스템</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">총 박스 수</div>
+                <div class="stat-value" id="totalBoxes">0</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="검색 (MAC, IP, 설비, 위치, 공정)">
+                <select id="processFilter">
+                    <option value="">전체 공정</option>
+                </select>
+                <button onclick="searchBoxes()">검색</button>
+            </div>
+            <button onclick="openAddModal()">+ 박스 추가</button>
+            <button class="btn-secondary" onclick="exportToExcel()">📥 엑셀 다운로드</button>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            데이터를 불러오는 중...
+        </div>
+        
+        <div id="tableContainer">
+            <table id="boxTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>MAC 주소</th>
+                        <th>IP 주소</th>
+                        <th>메인 설비</th>
+                        <th>위치</th>
+                        <th>공정</th>
+                        <th>비고</th>
+                        <th>등록일</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody id="boxTableBody">
+                </tbody>
+            </table>
+            
+            <div class="pagination">
+                <button onclick="prevPage()" id="prevBtn">이전</button>
+                <span class="page-info" id="pageInfo">1 / 1</span>
+                <button onclick="nextPage()" id="nextBtn">다음</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Modal -->
+    <div id="boxModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="modal-header">
+                <h2 id="modalTitle">박스 추가</h2>
+            </div>
+            <form id="boxForm" onsubmit="saveBox(event)">
+                <input type="hidden" id="boxId">
+                
+                <div class="form-group">
+                    <label class="required">MAC 주소</label>
+                    <input type="text" id="macAddress" placeholder="XX:XX:XX:XX:XX:XX" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>IP 주소</label>
+                    <input type="text" id="ipAddress" placeholder="192.168.1.100">
+                </div>
+                
+                <div class="form-group">
+                    <label>메인 설비</label>
+                    <input type="text" id="mainEquipment" placeholder="설비명 입력">
+                </div>
+                
+                <div class="form-group">
+                    <label>위치</label>
+                    <input type="text" id="location" placeholder="공장/층/구역 등">
+                </div>
+                
+                <div class="form-group">
+                    <label class="required">공정</label>
+                    <input type="text" id="process" placeholder="공정명 입력" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>비고</label>
+                    <textarea id="note" placeholder="추가 정보 입력"></textarea>
+                </div>
+                
+                <button type="submit" style="width: 100%;">저장</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/api';  // Nginx 프록시 경로 사용
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSearch = '';
+        let currentProcess = '';
+        
+        async function loadBoxes(page = 1) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('tableContainer').style.display = 'none';
+            
+            try {
+                const params = new URLSearchParams({
+                    page: page,
+                    page_size: 50,
+                    ...(currentSearch && { search: currentSearch }),
+                    ...(currentProcess && { process: currentProcess })
+                });
+                
+                const response = await fetch(`${API_BASE}/boxes?${params}`);
+                const data = await response.json();
+                
+                currentPage = data.page;
+                totalPages = data.total_pages;
+                
+                document.getElementById('totalBoxes').textContent = data.total;
+                document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+                document.getElementById('prevBtn').disabled = currentPage === 1;
+                document.getElementById('nextBtn').disabled = currentPage === totalPages;
+                
+                const tbody = document.getElementById('boxTableBody');
+                tbody.innerHTML = '';
+                
+                if (data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="empty">등록된 박스가 없습니다</td></tr>';
+                } else {
+                    data.items.forEach(box => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${box.id}</td>
+                            <td><strong>${box.mac_address}</strong></td>
+                            <td>${box.ip_address || '-'}</td>
+                            <td>${box.main_equipment || '-'}</td>
+                            <td>${box.location || '-'}</td>
+                            <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px;">${box.process}</span></td>
+                            <td>${box.note || '-'}</td>
+                            <td>${new Date(box.created_at).toLocaleDateString('ko-KR')}</td>
+                            <td class="actions">
+                                <button class="btn-warning" onclick="editBox(${box.id})">수정</button>
+                                <button class="btn-danger" onclick="deleteBox(${box.id})">삭제</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                alert('데이터를 불러오는데 실패했습니다: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+            }
+        }
+        
+        async function loadProcesses() {
+            try {
+                const response = await fetch(`${API_BASE}/processes`);
+                const processes = await response.json();
+                
+                const select = document.getElementById('processFilter');
+                processes.forEach(process => {
+                    const option = document.createElement('option');
+                    option.value = process;
+                    option.textContent = process;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('공정 목록 로드 실패:', error);
+            }
+        }
+        
+        function searchBoxes() {
+            currentSearch = document.getElementById('searchInput').value;
+            currentProcess = document.getElementById('processFilter').value;
+            loadBoxes(1);
+        }
+        
+        function prevPage() {
+            if (currentPage > 1) {
+                loadBoxes(currentPage - 1);
+            }
+        }
+        
+        function nextPage() {
+            if (currentPage < totalPages) {
+                loadBoxes(currentPage + 1);
+            }
+        }
+        
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '박스 추가';
+            document.getElementById('boxForm').reset();
+            document.getElementById('boxId').value = '';
+            document.getElementById('boxModal').style.display = 'block';
+        }
+        
+        async function editBox(id) {
+            try {
+                const response = await fetch(`${API_BASE}/boxes/${id}`);
+                const box = await response.json();
+                
+                document.getElementById('modalTitle').textContent = '박스 수정';
+                document.getElementById('boxId').value = box.id;
+                document.getElementById('macAddress').value = box.mac_address;
+                document.getElementById('ipAddress').value = box.ip_address || '';
+                document.getElementById('mainEquipment').value = box.main_equipment || '';
+                document.getElementById('location').value = box.location || '';
+                document.getElementById('process').value = box.process;
+                document.getElementById('note').value = box.note || '';
+                
+                document.getElementById('boxModal').style.display = 'block';
+            } catch (error) {
+                alert('박스 정보를 불러오는데 실패했습니다: ' + error.message);
+            }
+        }
+        
+        async function saveBox(event) {
+            event.preventDefault();
+            
+            const boxId = document.getElementById('boxId').value;
+            const data = {
+                mac_address: document.getElementById('macAddress').value,
+                ip_address: document.getElementById('ipAddress').value || null,
+                main_equipment: document.getElementById('mainEquipment').value || null,
+                location: document.getElementById('location').value || null,
+                process: document.getElementById('process').value,
+                note: document.getElementById('note').value || null
+            };
+            
+            try {
+                let response;
+                if (boxId) {
+                    response = await fetch(`${API_BASE}/boxes/${boxId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/boxes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+                
+                if (response.ok) {
+                    alert(boxId ? '수정되었습니다' : '등록되었습니다');
+                    closeModal();
+                    loadBoxes(currentPage);
+                    loadProcesses();
+                } else {
+                    const error = await response.json();
+                    alert('오류: ' + (error.detail || '저장에 실패했습니다'));
+                }
+            } catch (error) {
+                alert('저장에 실패했습니다: ' + error.message);
+            }
+        }
+        
+        async function deleteBox(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/boxes/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('삭제되었습니다');
+                    loadBoxes(currentPage);
+                } else {
+                    alert('삭제에 실패했습니다');
+                }
+            } catch (error) {
+                alert('삭제에 실패했습니다: ' + error.message);
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('boxModal').style.display = 'none';
+        }
+        
+        async function exportToExcel() {
+            try {
+                const params = new URLSearchParams({
+                    ...(currentSearch && { search: currentSearch }),
+                    ...(currentProcess && { process: currentProcess })
+                });
+                
+                const response = await fetch(`${API_BASE}/boxes/export/excel?${params}`);
+                const blob = await response.blob();
+                
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `iot_boxes_${new Date().toISOString().slice(0,10)}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('엑셀 다운로드에 실패했습니다: ' + error.message);
+            }
+        }
+        
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('boxModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // 엔터키로 검색
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchBoxes();
+            }
+        });
+        
+        // 초기 로드
+        loadBoxes();
+        loadProcesses();
+    </script>
+</body>
+</html>
