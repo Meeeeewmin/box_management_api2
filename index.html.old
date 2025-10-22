@@ -253,7 +253,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔧 [VSP] IoT 박스 관리 시스템</h1>
+        <h1>🔧 IoT 박스 관리 시스템</h1>
         
         <div class="stats">
             <div class="stat-card">
@@ -332,12 +332,12 @@
                 
                 <div class="form-group">
                     <label>위치</label>
-                    <input type="text" id="location" placeholder="라인/층/구역 등 VSP 위치">
+                    <input type="text" id="location" placeholder="라인/층/구역 등">
                 </div>
                 
                 <div class="form-group">
                     <label class="required">공정</label>
-                    <input type="text" id="process" placeholder="공정명 입력" required>
+                    <input type="text" id="process" placeholder="공정명 입력 (대문자로 자동 변환)" required>
                 </div>
                 
                 <div class="form-group">
@@ -419,12 +419,6 @@
                 const processes = await response.json();
                 
                 const select = document.getElementById('processFilter');
-                // 기존 옵션 삭제 (첫 번째 "전체 공정" 옵션 제외)
-                while (select.options.length > 1) {
-                    select.remove(1);
-                }
-                
-                // 새 옵션 추가
                 processes.forEach(process => {
                     const option = document.createElement('option');
                     option.value = process;
@@ -517,17 +511,7 @@
                     loadProcesses();
                 } else {
                     const error = await response.json();
-                    // 에러 메시지 개선
-                    let errorMessage = '저장에 실패했습니다';
-                    if (error.detail) {
-                        if (Array.isArray(error.detail)) {
-                            // Validation 에러
-                            errorMessage = error.detail.map(e => e.msg).join('\n');
-                        } else if (typeof error.detail === 'string') {
-                            errorMessage = error.detail;
-                        }
-                    }
-                    alert('오류: ' + errorMessage);
+                    alert('오류: ' + (error.detail || '저장에 실패했습니다'));
                 }
             } catch (error) {
                 alert('저장에 실패했습니다: ' + error.message);
