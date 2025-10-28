@@ -29,6 +29,7 @@ class BoxDB(Base):
     main_equipment = Column(String(100), nullable=True)
     location = Column(String(200), nullable=True)
     process = Column(String(100), nullable=False, index=True)
+    manager = Column(String(50), nullable=True)  # 담당자 컬럼 추가
     note = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -40,6 +41,7 @@ class BoxBase(BaseModel):
     main_equipment: Optional[str] = Field(None, description="메인 설비")
     location: Optional[str] = Field(None, description="위치")
     process: str = Field(..., description="공정 (필수)")
+    manager: Optional[str] = Field(None, description="담당자")  # 담당자 필드 추가
     note: Optional[str] = Field(None, description="비고")
     
     @validator('mac_address')
@@ -75,6 +77,7 @@ class BoxUpdate(BaseModel):
     main_equipment: Optional[str] = None
     location: Optional[str] = None
     process: Optional[str] = None
+    manager: Optional[str] = None  # 담당자 필드 추가
     note: Optional[str] = None
     
     @validator('mac_address')
@@ -179,7 +182,8 @@ def get_boxes(
             BoxDB.ip_address.contains(search),
             BoxDB.main_equipment.contains(search),
             BoxDB.location.contains(search),
-            BoxDB.process.contains(search)
+            BoxDB.process.contains(search),
+            BoxDB.manager.contains(search)  # 담당자 검색 추가
         )
         query = query.filter(search_filter)
     
@@ -250,7 +254,8 @@ def export_to_excel(
             BoxDB.ip_address.contains(search),
             BoxDB.main_equipment.contains(search),
             BoxDB.location.contains(search),
-            BoxDB.process.contains(search)
+            BoxDB.process.contains(search),
+            BoxDB.manager.contains(search)  # 담당자 검색 추가
         )
         query = query.filter(search_filter)
     
@@ -263,7 +268,7 @@ def export_to_excel(
     ws = wb.active
     ws.title = "IoT Boxes"
     
-    headers = ["ID", "MAC 주소", "IP 주소", "메인 설비", "위치", "공정", "비고", "등록일", "수정일"]
+    headers = ["ID", "MAC 주소", "IP 주소", "메인 설비", "위치", "공정", "담당자", "비고", "등록일", "수정일"]
     ws.append(headers)
     
     for box in boxes:
@@ -274,6 +279,7 @@ def export_to_excel(
             box.main_equipment or "",
             box.location or "",
             box.process,
+            box.manager or "",
             box.note or "",
             box.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             box.updated_at.strftime("%Y-%m-%d %H:%M:%S")

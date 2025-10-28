@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IoT 박스 관리 시스템</title>
+    <title>IoT Box 관리</title>
     <style>
         * {
             margin: 0;
@@ -262,9 +262,9 @@
             </div>
         </div>
         
-        <div class="controls">
+                    <div class="controls">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="검색 (MAC, IP, 설비, 위치, 공정)">
+                <input type="text" id="searchInput" placeholder="검색 (MAC, IP, 설비, 위치, 공정, 담당자)">
                 <select id="processFilter">
                     <option value="">전체 공정</option>
                 </select>
@@ -288,6 +288,7 @@
                         <th>메인 설비</th>
                         <th>위치</th>
                         <th>공정</th>
+                        <th>담당자</th>
                         <th>비고</th>
                         <th>등록일</th>
                         <th>관리</th>
@@ -332,12 +333,17 @@
                 
                 <div class="form-group">
                     <label>위치</label>
-                    <input type="text" id="location" placeholder="라인/층/구역 등 VSP 위치">
+                    <input type="text" id="location" placeholder="라인/층/구역 등">
                 </div>
                 
                 <div class="form-group">
                     <label class="required">공정</label>
-                    <input type="text" id="process" placeholder="공정명 입력" required>
+                    <input type="text" id="process" placeholder="공정명 입력 (대문자로 자동 변환)" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>담당자</label>
+                    <input type="text" id="manager" placeholder="예: 김두현, 차우창, 고현">
                 </div>
                 
                 <div class="form-group">
@@ -395,6 +401,7 @@
                             <td>${box.main_equipment || '-'}</td>
                             <td>${box.location || '-'}</td>
                             <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px;">${box.process}</span></td>
+                            <td>${box.manager || '-'}</td>
                             <td>${box.note || '-'}</td>
                             <td>${new Date(box.created_at).toLocaleDateString('ko-KR')}</td>
                             <td class="actions">
@@ -473,6 +480,7 @@
                 document.getElementById('mainEquipment').value = box.main_equipment || '';
                 document.getElementById('location').value = box.location || '';
                 document.getElementById('process').value = box.process;
+                document.getElementById('manager').value = box.manager || '';
                 document.getElementById('note').value = box.note || '';
                 
                 document.getElementById('boxModal').style.display = 'block';
@@ -491,6 +499,7 @@
                 main_equipment: document.getElementById('mainEquipment').value || null,
                 location: document.getElementById('location').value || null,
                 process: document.getElementById('process').value,
+                manager: document.getElementById('manager').value || null,
                 note: document.getElementById('note').value || null
             };
             
